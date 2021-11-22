@@ -22,9 +22,8 @@ def rates():
             price = rate.get('price')
             times = rate.get('times')
             tz = rate.get('tz')
-        return f"received 'PUT' with payload: \n{req}", 200
-        # rates = request.args.get("rates")
-        # print(f"rates: {rates}")
+            print(f"rate: {rate}")
+        return "200"
     else:
         return f"'GET' received. rates: \n{request.get_json()}"
 

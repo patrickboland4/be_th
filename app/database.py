@@ -2,15 +2,6 @@ import sqlite3
 
 
 def create_connection(db_file):
-    '''
-    Create database connection to SQLite database specified by db_file
-
-    Args:
-        db_file (string): [description]
-
-    Returns:
-        Connection object or None: Connection object or None
-    '''
     connection = None
 
     try:
@@ -30,9 +21,7 @@ def create_table(connection, create_table_sql):
         raise
 
 
-def main():
-    db_file = "./database.db"
-
+def start(db_file="./database.db"):
     create_table_sql = """ CREATE TABLE IF NOT EXISTS rates (
                                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                                     days TEXT NOT NULL,
@@ -46,6 +35,9 @@ def main():
         create_table(connection, create_table_sql)
     else:
         raise Exception("could not create table")
+
+    print(f"database started successfully")
+    return connection
 
 
 if __name__ == "__main__":
