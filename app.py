@@ -34,11 +34,14 @@ def create_app(db_file, table_name):
                 times = rate.get('times')
                 tz = rate.get('tz')
                 price = rate.get('price')
+                start, end = [int(i) for i in times.split('-')]
+                if end <= start:
+                    return create_response("End time must be less than start time", 400)
                 try:
                     with sqlite3.connect(db_file) as connection:
                         cursor = connection.cursor()
                         cursor.execute(
-                            f"INSERT INTO {TABLE_NAME} (days,times,tz,price) VALUES (?,?,?,?)",(days,times,tz,price) 
+                            f"INSERT INTO {TABLE_NAME} (days,times,tz,price,start,end) VALUES (?,?,?,?,?,?)",(days,times,tz,price,start,end) 
                         )
                         connection.commit()
                 except:
@@ -51,7 +54,7 @@ def create_app(db_file, table_name):
             try:
                 with sqlite3.connect(db_file) as connection:
                     cursor = connection.cursor()
-                    cursor.execute(f"SELECT * from {TABLE_NAME}")
+                    cursor.execute(f"SELECT days, times, tz, price FROM {TABLE_NAME}")
                     rows = cursor.fetchall()
                     if rows:
                         result = []
@@ -81,19 +84,42 @@ def create_app(db_file, table_name):
             connection.close()
 
 
-    def create_response(message, code, result=None):
-        return jsonify(dict(message=message, code=code, result=result))
-
-
     @app.route('/price')
     def price():
         start, end = [request.args.get(i) for i in ('start', 'end')]
         start_day, end_day = get_day_of_week_from_timestamp(*[start, end])
-        start_time, end_time = get_
-        pdb.set_trace()
+        if start_day != end_day:
+            return jsonify("unavailable")
+        start_time, end_time = get_time_from_timestamp(*[start, end])
+        start_day_pattern = f"%{start_day}%"
+
+        try:
+            with sqlite3.connect(db_file) as connection:
+                cursor = connection.cursor()
+                cursor.execute(
+                    f"SELECT price FROM {TABLE_NAME} WHERE days LIKE ? AND start < ? AND end > ?",(start_day_pattern,start_time,end_time,)
+                )
+                rows = cursor.fetchall()
+                if len(rows) > 1:
+                    connection.close()
+                    return jsonify("unavailable")
+                elif len(rows) == 1:
+                    return jsonify(dict(price=rows.pop()[0]))
+                else:
+                    response = create_response("DATA NOT FOUND", 404)
+        except:
+            raise
+        finally:
+            connection.close()
+        return response
+
         return create_response("NOT FOUND", 404)
 
     return app
+    
+
+def create_response(message, code, result=None):
+    return jsonify(dict(message=message, code=code, result=result))
 
 
 def get_day_of_week_from_timestamp(*args):
@@ -102,6 +128,14 @@ def get_day_of_week_from_timestamp(*args):
     for arg in args:
         day_of_week = datetime.datetime.strptime(arg, "%Y-%m-%dT%H:%M:%S%z").strftime('%a').lower()
         response.append(day_converter.get(day_of_week))
+    return response
+
+
+def get_time_from_timestamp(*args):
+    response = []
+    for arg in args:
+        time_as_int = int(datetime.datetime.strptime(arg, "%Y-%m-%dT%H:%M:%S%z").strftime('%H%M'))
+        response.append(time_as_int)
     return response
 
 

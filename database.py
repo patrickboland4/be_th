@@ -27,7 +27,9 @@ def setup(db_file, table_name):
                                     days TEXT NOT NULL,
                                     times TEXT NOT NULL,
                                     tz TEXT NOT NULL,
-                                    price INTEGER NOT NULL
+                                    price INTEGER NOT NULL,
+                                    start INTEGER NOT NULL,
+                                    end INTEGER NOT NULL
                                 ); """
 
     connection = create_connection(db_file)
