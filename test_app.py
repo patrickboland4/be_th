@@ -2,6 +2,7 @@ import os
 import pdb
 import tempfile
 
+import flask
 import pytest
 
 from app import create_app
@@ -24,26 +25,27 @@ def client():
     os.unlink(db_path)
 
 
-def test_empty_db_response_message(client):
-    '''
-    Test blank database
+def test_non_json_input_in_rates_put_returns_exp_response(client):
+    response = client.put("/rates")
+    assert response.is_json
+    assert response.json['code'] == 400
 
-    Args:
-        client ([type]): [description]
-    '''
+
+def test_empty_db_response_message_on_get(client):
     response = client.get('/rates')
     assert response.is_json
-    assert b'No data found' in response.data
+    assert response.json['code'] == 404
 
 
-def test_non_empty_db_response_message(client):
+def test_non_empty_db_response_message_on_get(client):
     client.put("/rates", json={
         "rates":[{"days":"mon,tues,thurs","times":"0900-2100","tz":"America/Chicago","price":1500},{"days":"fri,sat,sun","times":"0900-2100","tz":"America/Chicago","price":2100}]
     })
     response = client.get('/rates')
     expected_response = [[1, 'mon,tues,thurs', '0900-2100', 'America/Chicago', 1500], [2, 'fri,sat,sun', '0900-2100', 'America/Chicago', 2100]]
     assert response.is_json
-    assert expected_response == response.json[0].get('rates')
+    assert expected_response == response.json['result']
+
 
 def test_writing_to_db_will_overwrite_existing_data(client):
     client.put("/rates", json={
@@ -55,5 +57,13 @@ def test_writing_to_db_will_overwrite_existing_data(client):
     response = client.get('/rates')
     expected_response = [[3, 'mon,tues,thurs', '0900-2100', 'America/Chicago', 1600], [4, 'fri,sat,sun', '0900-2100', 'America/Chicago', 2100]]
     assert response.is_json
-    assert expected_response == response.json[0].get('rates')
+    assert expected_response == response.json['result']
+
+
+def test_get_price_without_matching_data_returns_expected_response(client):
+    # response = client.get('/price?start=2015-07-01T07:00:00-05:00&end=2015-07-01T12:00:00-05:00')
+    response = client.get(
+        '/price?start=2021-11-22T07:00:00-05:00&end=2021-11-23T12:00:00-05:00'
+    )
+    assert 404 == response.json['code']
 

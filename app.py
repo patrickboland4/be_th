@@ -1,3 +1,4 @@
+import datetime
 import pdb
 import sqlite3
 
@@ -25,7 +26,7 @@ def create_app(db_file, table_name):
         '''
         if request.method == "PUT":
             if not request.is_json:
-                return jsonify("Request was not JSON", 400)
+                return create_response("Request must be JSON", 400)
             delete_records()
             rates = request.get_json().get('rates')
             for rate in rates:
@@ -45,24 +46,25 @@ def create_app(db_file, table_name):
                     raise
                 finally:
                     connection.close()
-            return jsonify("Records updated, 200")
+            return create_response("OK", 200)
         else:
             try:
                 with sqlite3.connect(db_file) as connection:
                     cursor = connection.cursor()
                     cursor.execute(f"SELECT * from {TABLE_NAME}")
                     rows = cursor.fetchall()
-                    message = {'rates': []}
                     if rows:
+                        result = []
                         for row in rows:
-                            message.get('rates').append(row)
+                            result.append(row)
+                        response = create_response("OK", 200, result=result)
                     else:
-                        message = "No data found, 404"
+                        response = create_response("DATA NOT FOUND", 404)
             except:
                 raise
             finally:
                 connection.close()
-            return jsonify(message, 200)
+            return response
 
 
     def delete_records():
@@ -79,27 +81,28 @@ def create_app(db_file, table_name):
             connection.close()
 
 
+    def create_response(message, code, result=None):
+        return jsonify(dict(message=message, code=code, result=result))
+
+
     @app.route('/price')
     def price():
-        '''
-        [summary]
-
-        Returns:
-            [type]: 
-                    allows the user to request the price for a requested time
-
-                    It uses query parameters for requesting the price
-                    The user specifies input date/times as ISO-8601 with timezones
-                    The paramters are start and end.
-                    An example query is ?start=2015-07-01T07:00:00-05:00&end=2015-07-01T12:00:00-05:00 
-                    Response contains price
-        '''
-        for k, v in request.args.items():
-            print(k, v)
         start, end = [request.args.get(i) for i in ('start', 'end')]
-        return f"start: {start}, end: {end}"
+        start_day, end_day = get_day_of_week_from_timestamp(*[start, end])
+        start_time, end_time = get_
+        pdb.set_trace()
+        return create_response("NOT FOUND", 404)
 
     return app
+
+
+def get_day_of_week_from_timestamp(*args):
+    day_converter = dict(mon='mon', tue='tues', wed='wed', thu='thurs', fri='fri', sat='sat', sun='sun')
+    response = []
+    for arg in args:
+        day_of_week = datetime.datetime.strptime(arg, "%Y-%m-%dT%H:%M:%S%z").strftime('%a').lower()
+        response.append(day_converter.get(day_of_week))
+    return response
 
 
 if __name__ == "__main__":
