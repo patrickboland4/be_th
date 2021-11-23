@@ -21,13 +21,13 @@ def create_table(connection, create_table_sql):
         raise
 
 
-def start(db_file="./database.db"):
-    create_table_sql = """ CREATE TABLE IF NOT EXISTS rates (
+def setup(db_file, table_name):
+    create_table_sql = f""" CREATE TABLE IF NOT EXISTS {table_name} (
                                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                                     days TEXT NOT NULL,
                                     times TEXT NOT NULL,
                                     tz TEXT NOT NULL,
-                                    price INTEGER NOT NULL 
+                                    price INTEGER NOT NULL
                                 ); """
 
     connection = create_connection(db_file)
@@ -35,10 +35,3 @@ def start(db_file="./database.db"):
         create_table(connection, create_table_sql)
     else:
         raise Exception("could not create table")
-
-    print(f"database started successfully")
-    return connection
-
-
-if __name__ == "__main__":
-    main()
