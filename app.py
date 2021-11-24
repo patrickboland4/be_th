@@ -17,28 +17,37 @@ def create_app(db_file, table_name):
     @app.route('/rates', methods=['GET', 'PUT'])
     def rates():
         '''
-        rates route.
+        The /rates endpoint is capable of responding to PUT and GET requests. 
 
-        put:
-            summary: rates endpoint
-            description: persist rate information.
-            payload:
-                {
-                    "rates": [
-                        {
-                            "days": "mon,tues,thurs", 
-                            "times": "0900-2100", 
-                            "tz": "America/Chicago", 
-                            "price": 1500
-                        },
-                        {
-                            "days": "fri,sat,sun", 
-                            "times": "0900-2100", 
-                            "tz": "America/Chicago", 
-                            "price": 2000
-                        }
-                    ]
-                }
+        -- PUT -- 
+        PUT requests update rate information. 
+        The payload for PUT requests must be JSON. 
+        The submitted JSON overwrites the stored rates.
+        A rate is comprised of a price, time range the rate is valid, 
+        and days of the week the rate applies to.
+        The following represents a sample json payload. 
+            {
+                "rates": [
+                    {
+                        "days": "mon,tues,thurs", 
+                        "times": "0900-2100", 
+                        "tz": "America/Chicago", 
+                        "price": 1500
+                    },
+                    {
+                        "days": "fri,sat,sun", 
+                        "times": "0900-2100", 
+                        "tz": "America/Chicago", 
+                        "price": 2000
+                    }
+                ]
+            }
+
+        Return values:
+        "OK" is returned upon successful loading of the JSON payload. 
+        Exceptions may be raised due to problems during data persistence. 
+        "INVALID..." is returned to indicate bad payload. 
+
             responses:
                 INVALID INPUT: request must be json:
                     description: the request must be valid json
