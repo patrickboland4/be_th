@@ -16,6 +16,60 @@ def create_app(db_file, table_name):
 
     @app.route('/rates', methods=['GET', 'PUT'])
     def rates():
+        '''
+        rates route.
+
+        put:
+            summary: rates endpoint
+            description: persist rate information.
+            payload:
+                {
+                    "rates": [
+                        {
+                            "days": "mon,tues,thurs", 
+                            "times": "0900-2100", 
+                            "tz": "America/Chicago", 
+                            "price": 1500
+                        },
+                        {
+                            "days": "fri,sat,sun", 
+                            "times": "0900-2100", 
+                            "tz": "America/Chicago", 
+                            "price": 2000
+                        }
+                    ]
+                }
+            responses:
+                INVALID INPUT: request must be json:
+                    description: the request must be valid json
+                INVALID INPUT: end time must be greater than start time:
+                    description: times must be a valid string where end time is greater than start time
+                OK:
+                    description: PUT succeeded.
+        get:
+            summary: rates endpoint
+            description: get existing rates.
+            responses:
+                {
+                    "rates": [
+                        {
+                            "days": "mon,tues,thurs", 
+                            "times": "0900-2100", 
+                            "tz": "America/Chicago", 
+                            "price": 1500
+                        },
+                        {
+                            "days": "fri,sat,sun", 
+                            "times": "0900-2100", 
+                            "tz": "America/Chicago", 
+                            "price": 2000
+                        }
+                    ]
+                }
+                    description: existing rates were returned.
+                NOT FOUND:
+                    description: no rates are stored.
+        '''
         if request.method == "PUT":
             if not request.is_json:
                 return jsonify("INVALID INPUT: request must be json")
