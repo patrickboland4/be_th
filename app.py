@@ -1,6 +1,7 @@
 import datetime
 import pdb
 import sqlite3
+import json
 
 from flask import Flask, request, jsonify
 
@@ -15,18 +16,9 @@ def create_app(db_file, table_name):
 
     @app.route('/rates', methods=['GET', 'PUT'])
     def rates():
-        '''
-        takes a PUT where rate information can be updated by submitting a modified rates JSON
-        overwrites the stored rates
-
-        rate is comprised of a 
-        price, time range the rate is valid, and days of the week the rate applies to
-
-        This path when requested with a GET returns the rates stored.
-        '''
         if request.method == "PUT":
             if not request.is_json:
-                return create_response("Request must be JSON", 400)
+                return jsonify("INVALID INPUT: request must be json")
             delete_records()
             rates = request.get_json().get('rates')
             for rate in rates:
@@ -36,7 +28,7 @@ def create_app(db_file, table_name):
                 price = rate.get('price')
                 start, end = [int(i) for i in times.split('-')]
                 if end <= start:
-                    return create_response("End time must be less than start time", 400)
+                    return jsonify("INVALID INPUT: end time must be greater than start time")
                 try:
                     with sqlite3.connect(db_file) as connection:
                         cursor = connection.cursor()
@@ -49,7 +41,7 @@ def create_app(db_file, table_name):
                     raise
                 finally:
                     connection.close()
-            return create_response("OK", 200)
+            return jsonify("OK")
         else:
             try:
                 with sqlite3.connect(db_file) as connection:
@@ -60,9 +52,9 @@ def create_app(db_file, table_name):
                         result = []
                         for row in rows:
                             result.append(row)
-                        response = create_response("OK", 200, result=result)
+                        response = jsonify(dict(rates=result))
                     else:
-                        response = create_response("DATA NOT FOUND", 404)
+                        response = jsonify("NOT FOUND")
             except:
                 raise
             finally:
@@ -91,36 +83,29 @@ def create_app(db_file, table_name):
         if start_day != end_day:
             return jsonify("unavailable")
         start_time, end_time = get_time_from_timestamp(*[start, end])
-        start_day_pattern = f"%{start_day}%"
+        day_pattern = f"%{start_day}%"
 
         try:
             with sqlite3.connect(db_file) as connection:
                 cursor = connection.cursor()
                 cursor.execute(
-                    f"SELECT price FROM {TABLE_NAME} WHERE days LIKE ? AND start < ? AND end > ?",(start_day_pattern,start_time,end_time,)
+                    f"SELECT price FROM {TABLE_NAME} WHERE days LIKE ? AND start <= ? AND end >= ?",(day_pattern,start_time,end_time,)
                 )
                 rows = cursor.fetchall()
                 if len(rows) > 1:
-                    connection.close()
-                    return jsonify("unavailable")
+                    response = jsonify("unavailable")
                 elif len(rows) == 1:
-                    return jsonify(dict(price=rows.pop()[0]))
+                    response = jsonify(dict(price=rows.pop()[0]))
                 else:
-                    response = create_response("DATA NOT FOUND", 404)
+                    response = jsonify("NOT FOUND")
         except:
             raise
         finally:
             connection.close()
         return response
 
-        return create_response("NOT FOUND", 404)
-
     return app
     
-
-def create_response(message, code, result=None):
-    return jsonify(dict(message=message, code=code, result=result))
-
 
 def get_day_of_week_from_timestamp(*args):
     day_converter = dict(mon='mon', tue='tues', wed='wed', thu='thurs', fri='fri', sat='sat', sun='sun')
@@ -142,4 +127,9 @@ def get_time_from_timestamp(*args):
 if __name__ == "__main__":
     db_file="./database.db"
     database.setup(db_file, TABLE_NAME)
-    create_app(db_file, TABLE_NAME).run()
+    app = create_app(db_file, TABLE_NAME)
+    with open("./rates.json") as f:
+        payload = json.load(f)
+    with app.test_client() as client:
+        client.put("/rates", json=payload)
+    app.run()
