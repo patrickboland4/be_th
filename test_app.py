@@ -44,12 +44,6 @@ def test_rates_with_missing_field_returns_exp_response(client):
     assert "INVALID INPUT: rates missing required field" == response.json
 
 
-@pytest.mark.skip(reason="FlaskClient class only supports get and put. Come back to how to test this.")
-def test_rates_with_non_put_or_get_returns_exp_response(client):
-    response = client.put("/rates")
-    assert "invalid request type" == response.json
-
-
 def test_end_time_greater_than_start_time_on_put_returns_exp_response(client):
     response = client.put("/rates", json={
         "rates":[{"days":"mon,tues,thurs","times":"2100-0900","tz":"America/Chicago","price":1500}]

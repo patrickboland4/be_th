@@ -58,7 +58,7 @@ def create_app(db_file, table_name):
                     description: PUT succeeded.
         -- GET --
         GET requests return the rates stored. 
-        responses:
+        Sample response:
             {
                 "rates": [
                     {
@@ -75,9 +75,7 @@ def create_app(db_file, table_name):
                     }
                 ]
             }
-                description: existing rates were returned.
-            NOT FOUND:
-                description: no rates are stored.
+        If no rates are stored, the application responds with "NOT FOUND".
         '''
         if request.method == "PUT":
             if not request.is_json:
@@ -109,7 +107,7 @@ def create_app(db_file, table_name):
                 finally:
                     connection.close()
             return jsonify("OK")
-        elif request.method == "GET":
+        else:
             try:
                 with sqlite3.connect(db_file) as connection:
                     cursor = connection.cursor()
@@ -127,8 +125,6 @@ def create_app(db_file, table_name):
             finally:
                 connection.close()
             return response
-        else:
-            return jsonify("invalid request type")
 
 
     def delete_records():
@@ -145,8 +141,28 @@ def create_app(db_file, table_name):
             connection.close()
 
 
-    @app.route('/price')
+    @app.route('/price', methods=['GET'])
     def price():
+        '''
+        The /price endpoint is capable of responding to GET requests.
+        This endpoint allows the user to request the price for a specified time.
+        It uses query parameters for requesting the price
+        The user specifies input date/times as ISO-8601 with timezones.
+        The parameters are start and end.
+        An example query is:
+            ?start=2015-07-01T07:00:00-05:00&end=2015-07-01T12:00:00-05:00 
+        The response contains price, e.g.
+            {
+                "price": 5000
+            }
+
+        This response will return "unavailable" under these conditions:
+            - User input spans more than one day.
+            - The specified time period contains more than one rate.
+
+        If a rate does not exist for the specified time interval,
+        the application will respond with "NOT FOUND".
+        '''
         start, end = [request.args.get(i) for i in ('start', 'end')]
         start_day, end_day = get_day_of_week_from_timestamp(*[start, end])
         if start_day != end_day:
@@ -193,12 +209,16 @@ def get_time_from_timestamp(*args):
     return response
 
 
-if __name__ == "__main__":
-    db_file="./database.db"
-    database.setup(db_file, TABLE_NAME)
-    app = create_app(db_file, TABLE_NAME)
+def perform_initial_load(app):
     with open("./rates.json") as f:
         payload = json.load(f)
     with app.test_client() as client:
         client.put("/rates", json=payload)
+
+
+if __name__ == "__main__":
+    db_file="./database.db"
+    database.setup(db_file, TABLE_NAME)
+    app = create_app(db_file, TABLE_NAME)
+    perform_initial_load(app)
     app.run()
