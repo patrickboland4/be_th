@@ -25,7 +25,8 @@ def create_app(db_file, table_name):
         The submitted JSON overwrites the stored rates.
         A rate is comprised of a price, time range the rate is valid, 
         and days of the week the rate applies to.
-        The following represents a sample json payload. 
+        The following represents a valid JSON payload. 
+        Note that one or more rates may be specified. 
             {
                 "rates": [
                     {
@@ -46,49 +47,52 @@ def create_app(db_file, table_name):
         Return values:
         "OK" is returned upon successful loading of the JSON payload. 
         Exceptions may be raised due to problems during data persistence. 
-        "INVALID..." is returned to indicate bad payload. 
+        "INVALID INPUT: ..." is returned to indicate bad payload. 
 
             responses:
-                INVALID INPUT: request must be json:
-                    description: the request must be valid json
-                INVALID INPUT: end time must be greater than start time:
-                    description: times must be a valid string where end time is greater than start time
+                INVALID INPUT: {descriptive message}:
+                    description: the application will respond with
+                    "INVALID INPUT:" followed by a descriptive message,
+                    indicating to the user why the input was invalid. 
                 OK:
                     description: PUT succeeded.
-        get:
-            summary: rates endpoint
-            description: get existing rates.
-            responses:
-                {
-                    "rates": [
-                        {
-                            "days": "mon,tues,thurs", 
-                            "times": "0900-2100", 
-                            "tz": "America/Chicago", 
-                            "price": 1500
-                        },
-                        {
-                            "days": "fri,sat,sun", 
-                            "times": "0900-2100", 
-                            "tz": "America/Chicago", 
-                            "price": 2000
-                        }
-                    ]
-                }
-                    description: existing rates were returned.
-                NOT FOUND:
-                    description: no rates are stored.
+        -- GET --
+        GET requests return the rates stored. 
+        responses:
+            {
+                "rates": [
+                    {
+                        "days": "mon,tues,thurs", 
+                        "times": "0900-2100", 
+                        "tz": "America/Chicago", 
+                        "price": 1500
+                    },
+                    {
+                        "days": "fri,sat,sun", 
+                        "times": "0900-2100", 
+                        "tz": "America/Chicago", 
+                        "price": 2000
+                    }
+                ]
+            }
+                description: existing rates were returned.
+            NOT FOUND:
+                description: no rates are stored.
         '''
         if request.method == "PUT":
             if not request.is_json:
                 return jsonify("INVALID INPUT: request must be json")
             delete_records()
             rates = request.get_json().get('rates')
+            if not rates:
+                return jsonify("INVALID INPUT: rates must not be empty")
             for rate in rates:
                 days = rate.get('days')
                 times = rate.get('times')
                 tz = rate.get('tz')
                 price = rate.get('price')
+                if not all([days, times, tz, price]):
+                    return jsonify("INVALID INPUT: rates missing required field")
                 start, end = [int(i) for i in times.split('-')]
                 if end <= start:
                     return jsonify("INVALID INPUT: end time must be greater than start time")
@@ -105,7 +109,7 @@ def create_app(db_file, table_name):
                 finally:
                     connection.close()
             return jsonify("OK")
-        else:
+        elif request.method == "GET":
             try:
                 with sqlite3.connect(db_file) as connection:
                     cursor = connection.cursor()
@@ -123,6 +127,8 @@ def create_app(db_file, table_name):
             finally:
                 connection.close()
             return response
+        else:
+            return jsonify("invalid request type")
 
 
     def delete_records():
