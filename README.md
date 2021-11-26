@@ -125,4 +125,27 @@ This response will return "unavailable" under these conditions:
 
 If a rate does not exist for the specified time interval,
 the application will respond with "NOT FOUND".
+___
 
+### Developing the application
+
+_Improvements from here_
+- decouple app and routes
+- include a dockerfile
+- metrics for endpoints captured and available to be queried via an endpoint (e.g. avg response time)
+- include a swagger spec
+- store in persistent data layer like postgres
+- use a linter
+
+_Considerations_
+- I endeavored to make the code readable, keeping lines below 80 characters. However, certain statements are beyond 80 characters to maintain readability.
+- One important piece to consider are the effects of concurrent users.
+- how a user may misuse the API (especially around missing or invalid input)
+- better input and error handling
+- emitting more helpful responses to client
+- input handling
+- consider how I may handle multiple timezones
+___
+
+### Improving upon the document received
+The paramters are start and end. --> Parameters

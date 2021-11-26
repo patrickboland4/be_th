@@ -90,15 +90,22 @@ def create_app(db_file, table_name):
                 tz = rate.get('tz')
                 price = rate.get('price')
                 if not all([days, times, tz, price]):
-                    return jsonify("INVALID INPUT: rates missing required field")
+                    return jsonify(
+                        "INVALID INPUT: rates missing required field"
+                    )
                 start, end = [int(i) for i in times.split('-')]
                 if end <= start:
-                    return jsonify("INVALID INPUT: end time must be greater than start time")
+                    return jsonify(
+                        "INVALID INPUT: end time must be greater than start time"
+                    )
                 try:
                     with sqlite3.connect(db_file) as connection:
                         cursor = connection.cursor()
                         cursor.execute(
-                            f"INSERT INTO {TABLE_NAME} (days,times,tz,price,start,end) VALUES (?,?,?,?,?,?)",(days,times,tz,price,start,end) 
+                            f"""INSERT INTO {TABLE_NAME} 
+                                (days,times,tz,price,start,end) 
+                                VALUES (?,?,?,?,?,?)""",
+                            (days,times,tz,price,start,end) 
                         )
                         connection.commit()
                 except:
@@ -111,7 +118,9 @@ def create_app(db_file, table_name):
             try:
                 with sqlite3.connect(db_file) as connection:
                     cursor = connection.cursor()
-                    cursor.execute(f"SELECT days, times, tz, price FROM {TABLE_NAME}")
+                    cursor.execute(
+                        f"SELECT days, times, tz, price FROM {TABLE_NAME}"
+                    )
                     rows = cursor.fetchall()
                     if rows:
                         result = []
@@ -174,7 +183,9 @@ def create_app(db_file, table_name):
             with sqlite3.connect(db_file) as connection:
                 cursor = connection.cursor()
                 cursor.execute(
-                    f"SELECT price FROM {TABLE_NAME} WHERE days LIKE ? AND start <= ? AND end >= ?",(day_pattern,start_time,end_time,)
+                    f"""SELECT price FROM {TABLE_NAME} WHERE days LIKE 
+                        ? AND start <= ? AND end >= ?""",
+                    (day_pattern,start_time,end_time,)
                 )
                 rows = cursor.fetchall()
                 if len(rows) > 1:
@@ -193,7 +204,10 @@ def create_app(db_file, table_name):
     
 
 def get_day_of_week_from_timestamp(*args):
-    day_converter = dict(mon='mon', tue='tues', wed='wed', thu='thurs', fri='fri', sat='sat', sun='sun')
+    day_converter = dict(
+        mon='mon', tue='tues', wed='wed', thu='thurs', fri='fri', 
+        sat='sat', sun='sun'
+    )
     response = []
     for arg in args:
         day_of_week = datetime.datetime.strptime(arg, "%Y-%m-%dT%H:%M:%S%z").strftime('%a').lower()
