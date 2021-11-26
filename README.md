@@ -6,13 +6,14 @@
 - Run `pip install -r requirements.txt`
 - Within the virtual environment at the project root, run `python app.py`
 - `* Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)` indicates the application has started successfully
+- Note that upon application start, the payload located in `rates.json` will be loaded to the database (also provisioned on application start). To modify the data loaded at startup, modify `rates.json`. 
 
 ## Interacting with the application
 Now that the server is running, we can interact with the application endpoints. One way to achieve this is using the popular http library, curl. 
 
 `PUT`
 ```
-$ url --header "Content-Type: application/json" --request PUT --data '{"rates":[{"days":"mon,tues,thurs","times":"0900-2100","tz":"America/Chicago","price":1500}]}' http://127.0.0.1:5000/rates
+$ curl --header "Content-Type: application/json" --request PUT --data '{"rates":[{"days":"mon,tues,thurs","times":"0900-2100","tz":"America/Chicago","price":1500}]}' http://127.0.0.1:5000/rates
 ```
 
 `GET`
