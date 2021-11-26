@@ -1,24 +1,22 @@
 import os
-import pdb
 import tempfile
 
 import flask
 import pytest
 
-from app import create_app
-from app import TABLE_NAME as table_name
-import database
+from app import app
+from app import database_helpers as dbh
+from config import TABLE_NAME as table_name
 
 
 @pytest.fixture
 def client():
     db_fd, db_path = tempfile.mkstemp()
     db_path += ".db"
-    app = create_app(db_path, table_name)
 
     with app.test_client() as client:
         with app.app_context():
-            database.setup(db_path, table_name)
+            dbh.create_table(db_path, table_name)
         yield client
 
     os.close(db_fd)
