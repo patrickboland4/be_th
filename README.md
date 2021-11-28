@@ -1,13 +1,20 @@
 ## System Requirements
 - python3
+- docker
 - Windows compatibility is unknown
 
-## Getting up and running
+## Running the app with docker
+- Ensure docker is running
+- Run `./start.sh`. Note you may need to make this shell script executable with `chmod +x start.sh`
+- See "Interacting with the application", below
+
+## Running the app without docker
 - Create a python3 virtual environment (see note on creating a virtual environment below)
 - Run `pip install -r requirements.txt`
 - Within the virtual environment at the project root, run `python run.py`
 - `* Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)` indicates the application has started successfully
 - Note that upon application start, the payload located in `rates.json` will be loaded to the database (also provisioned on application start). To modify the data loaded at startup, modify `rates.json`. 
+- See "Interacting with the application", below
 
 ## Testing the app
 Ensure `pytest` is installed
@@ -20,7 +27,7 @@ $ pytest
 ```
 
 ## Interacting with the application
-Now that the server is running, we can interact with the application endpoints. One way to achieve this is using `curl`. 
+Now that the server is running, we can interact with the application endpoints. One way to achieve this is by using `curl`. 
 
 `PUT`
 ```
@@ -33,6 +40,11 @@ $ curl --GET "http://127.0.0.1:5000/price?start=2021-11-22T10:00:00-05:00&end=20
 
 {"price":1500}
 ```
+We may also interact with the application within our browser. 
+
+To view rates, open `localhost:5000/rates`
+
+To get a price, go to the `/price` endpoint and enter a start and end time, e.g. `localhost:5000/price?start=2021-11-22T10:00:00-05:00&end=2021-11-22T12:00:00-05:00`
 
 More documentation regarding the behavior of these endpoints can be found below in "Endpoint Documentation". 
 
@@ -145,7 +157,6 @@ ___
 ## Development Notes
 
 _Improvements from here_
-- include a dockerfile
 - metrics for endpoints captured and available to be queried via an endpoint (e.g. avg response time)
 - include a swagger spec
 - store in persistent data layer like postgres

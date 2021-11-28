@@ -9,6 +9,11 @@ from config import TABLE_NAME as table_name
 from config import DB_FILE as db_file
 
 
+@app.route("/")
+def hello():
+    return jsonify("Hello World!")
+
+
 @app.route('/rates', methods=['GET', 'PUT'])
 def rates():
     '''

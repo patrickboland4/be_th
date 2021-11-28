@@ -4,10 +4,10 @@ from config import TABLE_NAME as table_name
 from config import DB_FILE as db_file
 
 
-def main():
+def main(host="127.0.0.1", port=5000, debug=False):
     dbh.create_table(db_file, table_name)
     dbh.perform_initial_load(app)
-    app.run()
+    app.run(host=host, port=port, debug=debug)
 
 
 if __name__ == "__main__":
