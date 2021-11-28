@@ -5,7 +5,7 @@
 ## Getting up and running
 - Create a python3 virtual environment (see note on creating a virtual environment below)
 - Run `pip install -r requirements.txt`
-- Within the virtual environment at the project root, run `python app.py`
+- Within the virtual environment at the project root, run `python run.py`
 - `* Running on http://127.0.0.1:5000/ (Press CTRL+C to quit)` indicates the application has started successfully
 - Note that upon application start, the payload located in `rates.json` will be loaded to the database (also provisioned on application start). To modify the data loaded at startup, modify `rates.json`. 
 
@@ -145,7 +145,6 @@ ___
 ## Development Notes
 
 _Improvements from here_
-- decouple app and routes, utilize an application structure that will scale better
 - include a dockerfile
 - metrics for endpoints captured and available to be queried via an endpoint (e.g. avg response time)
 - include a swagger spec
@@ -153,13 +152,14 @@ _Improvements from here_
 - use a linter
 
 _Considerations_
-- I endeavored to make the code readable, keeping lines below 80 characters. However, certain statements are beyond 80 characters to maintain readability.
 - One important piece to consider are the effects of concurrent users.
 - how a user may misuse the API (especially around missing or invalid input)
 - better input and error handling
 - emitting more helpful responses to client
 - input handling
 - consider how I may handle multiple timezones
+- I endeavored to make the code readable, keeping lines below 80 characters. However, certain statements are beyond 80 characters to maintain readability.
+- While the application structure can be improved, breaking out the `app` and `tests` is a good start towards allowing this application to scale.
 ___
 
 ## Improving the exercise
