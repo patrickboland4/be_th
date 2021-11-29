@@ -157,20 +157,23 @@ ___
 ## Development Notes
 
 _Improvements from here_
-- metrics for endpoints captured and available to be queried via an endpoint (e.g. avg response time)
-- include a swagger spec
-- store in persistent data layer like postgres
-- use a linter
-
-_Considerations_
-- One important piece to consider are the effects of concurrent users.
-- how a user may misuse the API (especially around missing or invalid input)
-- better input and error handling
-- emitting more helpful responses to client
-- input handling
-- consider how I may handle multiple timezones
-- I endeavored to make the code readable, keeping lines below 80 characters. However, certain statements are beyond 80 characters to maintain readability.
-- While the application structure can be improved, breaking out the `app` and `tests` is a good start towards allowing this application to scale.
+- Instrumentation (metrics) 
+    - Instrumentation is key towards observing the health of a given application. Instrumentation can take place at the host level (e.g. CPU, Memory), and application level (e.g. median response time).
+    - For this app, we would start by instrumenting the `price` and `rates` endpoints, and expose instrumentation data at a given endpoint. 
+    - We want each metric to possess meaning, and to explain something specific about the application. There are a number of metrics that could be relevant for this app, e.g. average response time, average response size, requests per second. Importantly, we should not forget metrics that indicate `tail latency`, or the worst latency. Tail latency may be expressed in `p` values, e.g. `p99 response time` is the worst 1% of response times. 
+    - Using a tool like Grafana, would help us visualize our instrumentation data. 
+    - Prometheus seems to be a popular option for instrumenting flask apps. 
+- Include a swagger spec
+- Load testing, Performance testing
+    - One option for performance testing is using a statically-typed client such as Go or Java. The reason for this is because the client can become a bottleneck when we are simulating hundreds or thousands of requests per second, which could yield skewed performance data. Using a statically typed language is one way to accommodate load testing with hundreds or thousands of concurrent requests.
+    - One important piece to consider are the effects of concurrent users. We should consider database patterns (Consistency vs Availability) as well as application patterns that will allow concurrent requests to be handled gracefully.
+- Databse
+    - Our data shouldn't be stored in a file. Instead, it should be stored in a database such as postgresql. 
+- Improve the code base
+    - Better error handling
+    - More helpful feedback for the client to describe certain types of application errors.
+    - Handling multiple timezones
+    - Use a linter
 ___
 
 ## Improving the exercise
